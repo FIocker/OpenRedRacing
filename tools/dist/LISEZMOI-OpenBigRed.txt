@@ -1,0 +1,46 @@
+OpenBigRed - version de test
+============================
+
+INSTALLATION
+------------
+Copier ces deux fichiers dans le dossier du jeu Big Red Racing d'origine (celui qui contient
+ALWAYS.WAP, les .LEV, les .VHC...) :
+
+    openbigred.exe
+    SDL2.dll
+
+Puis lancer openbigred.exe. Rien d'autre a installer (Windows 10 ou 11).
+
+Au premier lancement le jeu demande un pseudo. Il est enregistre dans
+%APPDATA%\OpenBigRed\profile.cfg, pas dans le dossier du jeu.
+
+Les fichiers du jeu d'origine ne sont ni modifies ni remplaces.
+
+
+JOUER EN RESEAU LOCAL
+---------------------
+Menu principal > MULTIPLAYER > NETWORK
+
+- Un joueur choisit CREATE A GAME : il est l'hote. Il regle le circuit, les tours, les
+  adversaires enregistres et le nombre de joueurs, puis appuie sur START quand tout le monde
+  est pret.
+- Les autres choisissent JOIN A GAME : la partie apparait dans la liste en quelques secondes.
+  Si elle n'apparait pas, taper l'adresse affichee dans le salon de l'hote (YOUR ADDRESS)
+  puis JOIN THIS ADDRESS.
+- Chacun se declare READY, puis choisit son vehicule ; la course part quand tout le monde a
+  choisi.
+
+PARE-FEU WINDOWS : au premier CREATE A GAME, Windows demande s'il faut autoriser
+openbigred.exe. Repondre OUI pour les reseaux PRIVES. Sans cela les autres ne peuvent pas
+rejoindre. Ports utilises : UDP 47314 (recherche des parties) et 47315 (la partie).
+
+Tous les joueurs doivent avoir LA MEME version d'openbigred.exe (sinon l'hote refuse
+l'entree : "THE HOST RUNS ANOTHER VERSION").
+
+Echap pendant une course reseau = quitter la partie (il n'y a pas de pause en reseau).
+
+
+EN CAS DE PROBLEME
+------------------
+Lancer openbigred.exe depuis une invite de commandes pour voir le journal : les lignes [net]
+disent qui s'est connecte, et "DESYNC" si deux machines ne voient plus la meme course.

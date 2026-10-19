@@ -1,0 +1,64 @@
+# Build outputs
+build/
+bin/
+*.o
+*.obj
+*.exe
+*.dll
+
+# Never accidentally commit original copyrighted game assets
+*.LEV
+*.VHC
+*.ENV
+*.SCN
+*.WAP
+*.MPH
+*.COL
+*.TM
+*.RAW
+*.MVI
+*.DIG
+*.CFG
+# ...and what those archives hold, once unpacked (2026-09-28: a stray folder of them was
+# committed; see tools/scn_dump.py)
+*.3DW
+*.3dw
+*.SPR
+*.FT
+*.FNT
+*.WAV
+*.REC
+*.CHT
+*.MPC
+*.DAT
+*.SHL
+*.GRP
+*.CSE
+--cat/
+
+# Local analysis project files (not source)
+*.gpr
+*.rep/
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor/OS cruft
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local dev-only camera override for openbigred.exe (see main.cpp) - never meant to be shared/committed
+debug_camera.txt
+
+# Written by lancer-course.bat: the game folder the user last picked. Local by definition.
+lancer-course.ini
+
+# Derived from the original copyrighted assets - regenerable from a local install, never
+# committed (same rule as the raw assets above):
+#   tools/_out_*.png        object renders produced by tools/visualize_3dw.py
+#   tools/vehicle_physics.json  every vehicle's handling tables, extracted from the .VHC scripts
+#                               by tools/extract_vehicle_physics.py
+tools/_out_*.png
+tools/vehicle_physics.json
