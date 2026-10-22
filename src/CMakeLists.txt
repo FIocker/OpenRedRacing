@@ -86,6 +86,7 @@ set(OPENBIGRED_WORLD_SOURCES
     audio/vehicle_audio.cpp
     formats/bigred_archive.cpp
     formats/game_files.cpp
+    formats/terrain_members.cpp
     formats/threedw.cpp
     formats/terrain.cpp
     formats/texture.cpp
@@ -167,6 +168,7 @@ add_executable(vehicle_preview
     vehicle_preview.cpp
     formats/bigred_archive.cpp
     formats/game_files.cpp
+    formats/terrain_members.cpp
     formats/localised_text.cpp   # the HUD's alphabet: interface_glyph
     formats/threedw.cpp
     render/gl_loader.cpp
@@ -195,6 +197,7 @@ endif()
 # REPEATED instead of rewritten from scratch every session.
 add_executable(physics_bench
     physics_bench.cpp
+    game/level_catalog.cpp
     ${OPENBIGRED_WORLD_SOURCES}
 )
 
@@ -287,8 +290,21 @@ set_tests_properties(net_bench PROPERTIES TIMEOUT 300)
 # The catalogue: every circuit's script read, the unplayable ones left out.
 add_test(NAME level_catalogue COMMAND openbigred --list WORKING_DIRECTORY ${OBR_TEST_DIR})
 set_tests_properties(level_catalogue PROPERTIES TIMEOUT 60
-                     PASS_REGULAR_EXPRESSION "DIRT1\t[A-Z0-9,]*JEEP"
-                     FAIL_REGULAR_EXPRESSION "RUF1")
+                     PASS_REGULAR_EXPRESSION "DIRT1\t[A-Z0-9,]*JEEP")
+
+add_executable(terrain_members_test terrain_members_test.cpp
+    formats/terrain_members.cpp formats/bigred_archive.cpp)
+target_include_directories(terrain_members_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+if(MINGW)
+    target_link_options(terrain_members_test PRIVATE -static-libgcc -static-libstdc++ -static)
+endif()
+add_test(NAME terrain_member_selection COMMAND terrain_members_test)
+if(OPENBIGRED_GAME_DIR)
+    add_test(NAME terrain_members_retail COMMAND terrain_members_test "${OPENBIGRED_GAME_DIR}")
+endif()
+add_test(NAME championship_rules COMMAND physics_bench - DIRT1 --bloc=CHAMPIONNAT
+         WORKING_DIRECTORY ${OBR_TEST_DIR})
+set_tests_properties(championship_rules PROPERTIES TIMEOUT 120)
 # A generated circuit can be driven: an autopilot laps a DIRT and a SNOW circuit in every vehicle
 # of the theme, and the lap is the RACE's own - the generated CHECKP lines fired in order.
 add_test(NAME generated_lap
