@@ -102,6 +102,8 @@ set(OPENBIGRED_WORLD_SOURCES
     scene/character_model.cpp
     scene/chase_camera.cpp
     scene/camera_motion.cpp
+    scene/comfort_camera.cpp
+    scene/camera_obstruction.cpp
     # The cabin view's dashboard: the `ndial` gauges drawn into the `dash` sheet.
     scene/dashboard.cpp
     scene/gate_overlay.cpp
@@ -262,6 +264,15 @@ if(MINGW)
     target_link_options(camera_motion_test PRIVATE -static-libgcc -static-libstdc++ -static)
 endif()
 add_test(NAME camera_motion COMMAND camera_motion_test)
+
+add_executable(comfort_camera_test comfort_camera_test.cpp scene/comfort_camera.cpp)
+target_include_directories(comfort_camera_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+if(MINGW)
+    target_link_options(comfort_camera_test PRIVATE -static-libgcc -static-libstdc++ -static)
+endif()
+add_test(NAME comfort_camera COMMAND comfort_camera_test)
+add_test(NAME comfort_camera_obstruction COMMAND physics_bench - CHOPPER1 --bloc=COMFORT_CAMERA)
+set_tests_properties(comfort_camera_obstruction PROPERTIES TIMEOUT 30)
 
 # --- A6: checks that answer yes or no ----------------------------------------------------------
 # `ctest --test-dir build` (or `-R name` for one). They read the original game from the default
