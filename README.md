@@ -87,11 +87,15 @@ openbigred                          # the menus, as in the original
 openbigred C:\BIGRED                # the same, with the game folder named
 openbigred - DIRT1 JEEP             # straight into one race: a level and a vehicle
 openbigred - DIRT1 JEEP -PLAYERS=2  # the same race in split screen
+openbigred - -BORDERLESS -SIZE=1920x1080  # desktop-fullscreen; restores to a 1920x1080 window
 ```
 
 Arrow keys to drive, `Ctrl` and `Alt` for the vehicle's actions; gamepads work too. `+` / `-`
 change the resolution (320x200, 640x480, the window's own), `-RES=320|640|native` picks the
-starting one, and `-MUTE` silences everything.
+starting one, and `-MUTE` silences everything. `Alt+Enter` switches between the desktop-sized
+borderless view and a resizable window. `-BORDERLESS` and `-WINDOWED` choose the startup mode;
+`-SIZE=WIDTHxHEIGHT` chooses the window size. Sizes from 320x200 through 16384x16384 are
+accepted. Windowed mode keeps any aspect ratio the display supports.
 
 ### The level viewer: `map_preview`
 

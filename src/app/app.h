@@ -57,6 +57,9 @@ public:
         // A window nobody sees - `openbigred --shots`, which reads the menus back from their
         // offscreen canvas and never needs the window itself (game/menu_shots.h).
         bool hidden = false;
+        // Use the monitor's full desktop rather than a decorated window at width x height.
+        // App still remembers the windowed size and position so Alt+Enter can restore it.
+        bool borderless = false;
         // No sound and no music, for this run only - the profile's volumes are not touched.
         // Every hidden test run (-SHOT) is silent: it plays behind whatever the user is doing.
         bool mute = false;
@@ -180,6 +183,8 @@ private:
     // connected-but-unopened one is silent. Handled by the App, not any screen: hotplug is
     // process-wide, and a screen should not have to care which of several pads moved.
     void handle_controller_device_event(const SDL_Event& e);
+    bool set_borderless(bool borderless);
+    void remember_windowed_bounds();
 
     SDL_Window* window_ = nullptr;
     SDL_GLContext gl_context_ = nullptr;
@@ -201,6 +206,11 @@ private:
     int pending_pops_ = 0;
 
     int width_ = 0, height_ = 0;
+    int windowed_x_ = 0, windowed_y_ = 0;
+    int windowed_width_ = 0, windowed_height_ = 0;
+    bool have_windowed_bounds_ = false;
+    bool borderless_ = false;
+    bool hidden_ = false;
     bool running_ = false;
     std::function<void(App&)> frame_hook_;
     std::string game_dir_;
