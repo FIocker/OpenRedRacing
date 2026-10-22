@@ -192,6 +192,8 @@ private:
         Controls controls = Controls::Everything;
         ChaseCamera camera;
         CameraState cam_prev{};
+        CameraMotion camera_motion;
+        bool camera_cut = false;
         VehicleInput input{};
         Mat4::Vec3 cam_pos{0.0f, 0.0f, 0.0f};
         Mat4::Vec3 look{0.0f, 0.0f, 1.0f};
@@ -211,7 +213,8 @@ private:
         int32_t cabin_look = 0, cabin_look_prev = 0;
         bool cabin_look_set = false;
         // The eye, `alpha` of the way from camera `prev` to camera `now`.
-        void place(const CameraState& prev, const CameraState& now, float alpha, int map_w);
+        void place(const CameraState& prev, const CameraState& now, float alpha, int map_w,
+                   bool smooth_chase = false);
     };
     std::vector<LocalView> views_;
     bool split() const { return views_.size() > 1; }

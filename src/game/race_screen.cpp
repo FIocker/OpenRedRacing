@@ -74,6 +74,7 @@ bool RaceScreen::enter(App& app) {
     for (LocalView& v : views_) {
         v.camera.reset(session_.car(v.racer), level_.terrain);
         v.cam_prev = v.camera.now;
+        v.camera_motion.reset(v.camera.now);
         if (setup_.start_in_cabin) {
             v.camera.preset = 2;   // where `C` leaves it on the way into the cabin
             v.cabin = true;
@@ -821,9 +822,9 @@ void RaceScreen::update(App& app, double dt_ms) {
     alpha_ = static_cast<float>(accumulator_ / kSimStep);
 
     // Camera: whatever the last two ticks left, read at the fraction of a tick we are at.
-    views_[0].place(view_prev(), view_now(), alpha_, scene_.map_w);
+    views_[0].place(view_prev(), view_now(), alpha_, scene_.map_w, !spectator_.active());
     for (size_t i = 1; i < views_.size(); ++i)
-        views_[i].place(views_[i].cam_prev, views_[i].camera.now, alpha_, scene_.map_w);
+        views_[i].place(views_[i].cam_prev, views_[i].camera.now, alpha_, scene_.map_w, true);
     for (size_t i = 0; i < views_.size(); ++i) place_cabin(views_[i], i == 0 && spectator_.active());
 }
 
@@ -955,8 +956,10 @@ int RaceScreen::local_seat_of(int racer) const {
 }
 
 void RaceScreen::LocalView::place(const CameraState& prev, const CameraState& now, float alpha,
-                                  int map_w) {
-    const CameraView v = camera_view(prev, now, alpha, map_w, kRenderScale);
+                                  int map_w, bool smooth_chase) {
+    const CameraView v = smooth_chase
+        ? camera_view(camera_motion.sample(alpha), map_w, kRenderScale)
+        : camera_view(prev, now, alpha, map_w, kRenderScale);
     cam_pos = {v.eye[0], v.eye[1], v.eye[2]};
     look = {v.forward[0], v.forward[1], v.forward[2]};
     right = {v.right[0], v.right[1], v.right[2]};
@@ -980,12 +983,16 @@ void RaceScreen::follow(LocalView& v) {
     const int want = watch_for(v.racer);
     if (want != watch) {
         // The first call lands here too, and the camera is already behind its own car.
-        if (watch >= 0) cam.reset(session_.car(want), level_.terrain);
+        if (watch >= 0) {
+            cam.reset(session_.car(want), level_.terrain);
+            v.camera_cut = true;
+        }
         watch = want;
     } else if (session_.respawned(want)) {
         // A respawn re-enters camera mode 4 in the original, which re-plants the camera behind
         // the vehicle instead of letting the rope drag it across the whole map.
         cam.reset(session_.car(want), level_.terrain);
+        v.camera_cut = true;
     }
     cam.step(session_.car(want), level_.terrain);   // on the tick too - never on the frame
 
@@ -1020,7 +1027,9 @@ void RaceScreen::step_simulation() {
         pose_cur_[static_cast<size_t>(i)] = pose_of(session_.car(i));
     for (LocalView& v : views_) {
         v.cam_prev = v.camera.now;
+        v.camera_cut = false;
         follow(v);
+        v.camera_motion.push(v.camera.now, v.camera_cut);
     }
     // The finish countdown is the session's (RaceSession::finish_deadline); said once, here.
     if (session_.finish_deadline() != 0 && !finish_announced_) {

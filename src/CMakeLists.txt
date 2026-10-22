@@ -102,6 +102,7 @@ set(OPENBIGRED_WORLD_SOURCES
     # The six drivers of CHARSCN.SCN: the menu shows one, a vehicle carries its head.
     scene/character_model.cpp
     scene/chase_camera.cpp
+    scene/camera_motion.cpp
     # The cabin view's dashboard: the `ndial` gauges drawn into the `dash` sheet.
     scene/dashboard.cpp
     scene/gate_overlay.cpp
@@ -264,6 +265,13 @@ if(MINGW)
     target_link_options(replay_metadata_test PRIVATE -static-libgcc -static-libstdc++ -static)
 endif()
 add_test(NAME replay_metadata COMMAND replay_metadata_test)
+
+add_executable(camera_motion_test camera_motion_test.cpp scene/camera_motion.cpp)
+target_include_directories(camera_motion_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+if(MINGW)
+    target_link_options(camera_motion_test PRIVATE -static-libgcc -static-libstdc++ -static)
+endif()
+add_test(NAME camera_motion COMMAND camera_motion_test)
 
 # --- A6: checks that answer yes or no ----------------------------------------------------------
 
