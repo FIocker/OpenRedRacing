@@ -258,6 +258,13 @@ foreach(tgt openbigred map_preview vehicle_preview physics_bench net_bench track
     )
 endforeach()
 
+add_executable(replay_metadata_test replay_metadata_test.cpp sim/replay.cpp sim/fixed.cpp)
+target_include_directories(replay_metadata_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+if(MINGW)
+    target_link_options(replay_metadata_test PRIVATE -static-libgcc -static-libstdc++ -static)
+endif()
+add_test(NAME replay_metadata COMMAND replay_metadata_test)
+
 # --- A6: checks that answer yes or no ----------------------------------------------------------
 
 # Container decoding checks need no game files, SDL window or renderer.

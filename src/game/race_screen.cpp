@@ -425,7 +425,7 @@ bool RaceScreen::load_world(App& app) {
                                      1, scene_, setup_.tinted ? &setup_.tint : nullptr,
                                      logo.valid() ? &logo : nullptr,
                                      driver_for(setup_.character, setup_.character_colour, true, me));
-    // Every other racer's body. A ghost in its recording's team repaint (header byte 28,
+    // Every other racer's body. A ghost in its recording's team repaint (header byte 31,
     // sim/replay.h); another human in the colour and emblem they announced in the lobby.
     // Before the atlas upload, like the player's.
     TeamLogos team_logos;
@@ -477,12 +477,15 @@ bool RaceScreen::load_world(App& app) {
                 gs.tinted ? &gs.tint : nullptr, theirs.valid() ? &theirs : nullptr,
                 driver_for(gs.character, gs.character_colour, true, them));
         } else {
-            // A recorded opponent: one of the six drivers by grid slot, in the head's own
-            // authored colours - the recordings do not say who was driving.
+            // A recorded opponent: its head is the recording's person byte. Keep the head's
+            // authored colours; the team/body colour is carried separately through field_.colour.
+            const int character = field_.tracks[si].valid()
+                                      ? field_.tracks[si].character
+                                      : i % kCharacterCount;
             Driver them;
             ghost_models_[si] = build_vehicle_model(
                 *field_.vhc[si], *ingame_, field_.tunings[si], field_.colour[si] + 1, scene_,
-                nullptr, nullptr, driver_for(i % kCharacterCount, 0, false, them));
+                nullptr, nullptr, driver_for(character, 0, false, them));
         }
     }
     // THE CABINS, one per local player, in their car's colour: the interior (`vehicle IN_...`,
