@@ -101,6 +101,7 @@ set(OPENBIGRED_WORLD_SOURCES
     # The six drivers of CHARSCN.SCN: the menu shows one, a vehicle carries its head.
     scene/character_model.cpp
     scene/chase_camera.cpp
+    scene/camera_motion.cpp
     # The cabin view's dashboard: the `ndial` gauges drawn into the `dash` sheet.
     scene/dashboard.cpp
     scene/gate_overlay.cpp
@@ -254,6 +255,13 @@ foreach(tgt openbigred map_preview vehicle_preview physics_bench net_bench track
             $<TARGET_FILE_DIR:${tgt}>
     )
 endforeach()
+
+add_executable(camera_motion_test camera_motion_test.cpp scene/camera_motion.cpp)
+target_include_directories(camera_motion_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+if(MINGW)
+    target_link_options(camera_motion_test PRIVATE -static-libgcc -static-libstdc++ -static)
+endif()
+add_test(NAME camera_motion COMMAND camera_motion_test)
 
 # --- A6: checks that answer yes or no ----------------------------------------------------------
 # `ctest --test-dir build` (or `-R name` for one). They read the original game from the default
