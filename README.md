@@ -121,6 +121,15 @@ vehicle_preview --dump C:\BIGRED JEEP             # no window: what every face o
 
 `ctest --test-dir build` runs the yes/no checks (they need the game files).
 
+On Windows x64, `tools/check_window_modes.ps1` checks native window bounds, borderless
+startup and an Alt+Enter round trip without global keyboard injection:
+
+```powershell
+./tools/check_window_modes.ps1 -Executable ./build/src/openbigred.exe -GameDirectory C:/BIGRED -OutputDirectory ./build/window-probe -IncludeMenu
+```
+
+It briefly shows its own test windows and writes results under the output directory.
+
 ## Documentation
 
 Coming Soon™
