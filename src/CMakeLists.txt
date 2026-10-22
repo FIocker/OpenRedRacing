@@ -256,6 +256,15 @@ foreach(tgt openbigred map_preview vehicle_preview physics_bench net_bench track
 endforeach()
 
 # --- A6: checks that answer yes or no ----------------------------------------------------------
+
+# Container decoding checks need no game files, SDL window or renderer.
+add_executable(archive_validation_test archive_validation_test.cpp formats/bigred_archive.cpp)
+target_include_directories(archive_validation_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+if(MINGW)
+    target_link_options(archive_validation_test PRIVATE -static-libgcc -static-libstdc++ -static)
+endif()
+add_test(NAME archive_validation COMMAND archive_validation_test)
+
 # `ctest --test-dir build` (or `-R name` for one). They read the original game from the default
 # install, like every tool here (`-` = that install), and each one states what must come out.
 # ⚠️ A REFERENCE CHECKSUM CHANGES WITH ANY CHANGE TO THE SIMULATION. When one is meant to, the
