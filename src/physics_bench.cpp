@@ -1,3 +1,5 @@
+#include "scene/camera_obstruction.h"
+
 // physics_bench - a windowless bench for the vehicle simulation.
 //
 // The handling model can only be judged two ways: by the user driving it, and by MEASURING it.
@@ -5621,6 +5623,51 @@ int main(int argc, char* argv[]) {
             std::printf("      tunnel flag set on %d of 600 ticks driving straight ahead\n",
                         inside);
         }
+    }
+
+    if (bloc("COMFORT_CAMERA")) {
+        // Synthetic geometry: the executable's ordinary level load is shared with
+        // the bench, but no authored collision placement determines these results.
+        std::vector<uint8_t> flat(64*64,0);
+        bigred::SimTerrain world;
+        world.w=world.h=64;
+        world.mph=flat.data(); world.mpc=flat.data();
+        world.build_blocker_grid();
+        using bigred::CameraPoint;
+        const CameraPoint focus{2000,-200,2000}, eye{2000,-200,600};
+        auto require=[](bool ok,const char* label) {
+            if (!ok) std::fprintf(stderr,"COMFORT_CAMERA: %s\n",label);
+            return ok;
+        };
+        if (!require(bigred::camera_arm_fraction(world,focus,eye)==1,"clear boom retracts")) return 1;
+        const CameraPoint buried{2000,200,600};
+        const double ground_fraction=bigred::camera_arm_fraction(world,focus,buried);
+        if (!require(ground_fraction>0 && ground_fraction<1 &&
+                     focus.y+(buried.y-focus.y)*ground_fraction+16<=0,
+                     "ground collision leaves eye underground")) return 1;
+        bigred::SimObject wall;
+        wall.blocker=wall.hard=wall.use_box=true;
+        wall.x=2000; wall.z=1300; wall.y=0; wall.radius=1000;
+        wall.box_xmin=-500; wall.box_xmax=500;
+        wall.box_zmin=-20; wall.box_zmax=20;
+        wall.y_top=-1000; wall.y_bottom=1000;
+        world.blockers.push_back(wall);
+        world.build_blocker_grid();
+        const double wall_fraction=bigred::camera_arm_fraction(world,focus,eye);
+        if (!require(wall_fraction>.1 && wall_fraction<.5 &&
+                     focus.z+(eye.z-focus.z)*wall_fraction>1336,
+                     "boom passes through wall")) return 1;
+        if (!require(bigred::camera_arm_fraction(world,{2000,-1200,2000},{2000,-1200,600})==1,
+                     "camera above wall is falsely blocked")) return 1;
+        // Below a floating obstacle: vehicle contacts' vertical gate alone lacks this test.
+        world.blockers[0].y_top=-1000; world.blockers[0].y_bottom=-500;
+        if (!require(bigred::camera_arm_fraction(world,focus,eye)==1,
+                     "camera below obstacle is falsely blocked")) return 1;
+        world.blockers[0].hard=false;
+        world.blockers[0].y_bottom=1000;
+        if (!require(bigred::camera_arm_fraction(world,focus,eye)==1,
+                     "soft prop blocks camera")) return 1;
+        std::puts("COMFORT_CAMERA: ground, hard wall, vertical bounds and soft props passed");
     }
 
     for (const std::string& name : g_blocs_wanted) {

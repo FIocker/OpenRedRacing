@@ -97,6 +97,14 @@ borderless view and a resizable window. `-BORDERLESS` and `-WINDOWED` choose the
 `-SIZE=WIDTHxHEIGHT` chooses the window size. Sizes from 320x200 through 16384x16384 are
 accepted. Windowed mode keeps any aspect ratio the display supports.
 
+The default chase view uses an independent comfort rig: damped horizontal and vertical
+follow, a stable horizon, gentle travel-heading alignment, and separate object framing.
+Small hover movements and turning on the spot do not drag the eye around. `C` cycles the
+three chase distances and the cabin view. `-CAMERA=CLASSIC` restores the original chase
+controller with smooth tick reconstruction; `-CAMERA=COMFORT` explicitly selects the default.
+Cabin, trackside and scripted fly-by views keep their own camera behavior.
+Reversing preserves the current orbit side rather than swinging the camera through 180 degrees.
+
 ### The level viewer: `map_preview`
 
 ```

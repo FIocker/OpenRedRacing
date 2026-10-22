@@ -28,6 +28,7 @@ Competition& App::competition() {
 }
 
 bool App::init(const Options& opts) {
+    comfort_camera_ = opts.comfort_camera;
     // ⚠️ GAMECONTROLLER, NOT JOYSTICK: SDL only raises SDL_CONTROLLERBUTTONDOWN/AXISMOTION for a
     // device opened as a game controller, and only a device SDL recognises as one at all - and
     // every menu must work with the pad as well as with the mouse. Its absence is not fatal: a

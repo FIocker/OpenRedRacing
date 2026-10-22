@@ -21,6 +21,7 @@
 #include "game/split_layout.h"
 #include "net/net_game.h"
 #include "scene/character_model.h"
+#include "scene/camera_obstruction.h"
 #include "sim/lockstep.h"
 #include "sim/snapshot.h"
 #include "ui/team_logos.h"
@@ -75,6 +76,8 @@ bool RaceScreen::enter(App& app) {
         v.camera.reset(session_.car(v.racer), level_.terrain);
         v.cam_prev = v.camera.now;
         v.camera_motion.reset(v.camera.now);
+        v.comfort_camera = ComfortCamera{};
+        v.comfort_cut_pending = true;
         if (setup_.start_in_cabin) {
             v.camera.preset = 2;   // where `C` leaves it on the way into the cabin
             v.cabin = true;
@@ -673,10 +676,8 @@ void RaceScreen::note_wrecks() {
 bool RaceScreen::out_of_race(int racer) const { return session_.out_of_race(racer); }
 
 void RaceScreen::update(App& app, double dt_ms) {
-    // Fixed-timestep simulation: the vehicle and the camera, and everything else that will ever
-    // move, run an exact whole number of times per second of wall clock, identically on every
-    // machine. The DISPLAY then interpolates between the last two ticks, which is what makes
-    // 30 fps and 240 fps show the same motion rather than the same code at two speeds.
+    // Vehicles and the classic camera use the deterministic fixed tick. Presentation
+    // interpolates the vehicle poses; the comfort rig follows those poses on the render clock.
     wall_ms_ += dt_ms;
 
     // ⚠️ A FLY-BY RUNS NO SIMULATION AT ALL. There is no vehicle to step, no input to read
@@ -821,10 +822,33 @@ void RaceScreen::update(App& app, double dt_ms) {
     // How far the wall clock has travelled into the tick that has not happened yet.
     alpha_ = static_cast<float>(accumulator_ / kSimStep);
 
-    // Camera: whatever the last two ticks left, read at the fraction of a tick we are at.
+    // Classic and spectator views reconstruct tick states. Comfort follows the drawn subject
+    // directly, with its own position and aim filters and no extra tick-history delay.
     views_[0].place(view_prev(), view_now(), alpha_, scene_.map_w, !spectator_.active());
     for (size_t i = 1; i < views_.size(); ++i)
         views_[i].place(views_[i].cam_prev, views_[i].camera.now, alpha_, scene_.map_w, true);
+    if (app.comfort_camera() && !setup_.fly_by) {
+        for (size_t i = 0; i < views_.size(); ++i) {
+            if (i == 0 && spectator_.active()) continue;
+            LocalView& v = views_[i];
+            const int watched = v.watch >= 0 ? v.watch : v.racer;
+            // Use exactly the pose being drawn, including network visual correction.
+            const VehiclePose pose = shown_pose(watched);
+            bool confined = session_.car(watched).in_tunnel;
+            if (v.comfort_camera.ready() && !v.comfort_cut_pending) {
+                const CameraSample& eye = v.comfort_camera.current();
+                confined = confined || camera_under_roof(level_.terrain, {eye.x, eye.y, eye.z});
+            }
+            const ComfortTarget target{{pose.x, pose.y, pose.z}, pose.yaw,
+                                       v.camera.preset, confined};
+            const CameraSample sample = v.comfort_camera.update(target, dt_ms / 1000.0,
+                v.comfort_cut_pending, [this](CameraPoint focus, CameraPoint eye) {
+                    return camera_arm_fraction(level_.terrain, focus, eye);
+                });
+            v.comfort_cut_pending = false;
+            v.place(camera_view(sample, scene_.map_w, kRenderScale));
+        }
+    }
     for (size_t i = 0; i < views_.size(); ++i) place_cabin(views_[i], i == 0 && spectator_.active());
 }
 
@@ -960,6 +984,10 @@ void RaceScreen::LocalView::place(const CameraState& prev, const CameraState& no
     const CameraView v = smooth_chase
         ? camera_view(camera_motion.sample(alpha), map_w, kRenderScale)
         : camera_view(prev, now, alpha, map_w, kRenderScale);
+    place(v);
+}
+
+void RaceScreen::LocalView::place(const CameraView& v) {
     cam_pos = {v.eye[0], v.eye[1], v.eye[2]};
     look = {v.forward[0], v.forward[1], v.forward[2]};
     right = {v.right[0], v.right[1], v.right[2]};
@@ -986,6 +1014,7 @@ void RaceScreen::follow(LocalView& v) {
         if (watch >= 0) {
             cam.reset(session_.car(want), level_.terrain);
             v.camera_cut = true;
+            v.comfort_cut_pending = true;
         }
         watch = want;
     } else if (session_.respawned(want)) {
@@ -993,6 +1022,7 @@ void RaceScreen::follow(LocalView& v) {
         // the vehicle instead of letting the rope drag it across the whole map.
         cam.reset(session_.car(want), level_.terrain);
         v.camera_cut = true;
+        v.comfort_cut_pending = true;
     }
     cam.step(session_.car(want), level_.terrain);   // on the tick too - never on the frame
 

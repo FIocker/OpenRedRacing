@@ -375,6 +375,7 @@ int main(int argc, char* argv[]) {
     bool spectate = false;    // -SPECTATE: the trackside cameras from the start
     bool fly_by = false;      // -FLYBY: the track's presentation fly-by (the VIEW button)
     bool mute = false;        // -MUTE: no sound, no music (a -SHOT run always is)
+    bool comfort_camera = true; // -CAMERA=CLASSIC restores the original chase controller
     uint32_t quit_after = 0;
     std::string name_override;
     bool net_local = false;   // -NETLOCAL: 127.0.0.1 only, no firewall question
@@ -404,6 +405,14 @@ int main(int argc, char* argv[]) {
         else if (upper == "-SOLO" || upper == "--SOLO") solo = true;
         else if (upper.rfind("-PLACE=", 0) == 0) grid_place = std::atoi(upper.c_str() + 7) - 1;
         else if (upper == "-CABIN") start_in_cabin = true;
+        else if (upper.rfind("-CAMERA=", 0) == 0) {
+            const std::string mode = upper.substr(8);
+            if (mode != "COMFORT" && mode != "CLASSIC") {
+                std::fprintf(stderr, "Camera must be COMFORT or CLASSIC.\n");
+                return 1;
+            }
+            comfort_camera = mode == "COMFORT";
+        }
         else if (upper == "-RES=320" || upper == "-RES=320X200") display_mode = 0, display_mode_given = true;
         else if (upper == "-RES=640" || upper == "-RES=640X480") display_mode = 1, display_mode_given = true;
         else if (upper == "-RES=NATIVE") display_mode = bigred::kDefaultDisplayMode, display_mode_given = true;
@@ -468,6 +477,7 @@ int main(int argc, char* argv[]) {
     opts.height = window_height;
     opts.borderless = borderless;
     opts.display_mode = display_mode;
+    opts.comfort_camera = comfort_camera;
     opts.hidden = !shot.empty() || hidden;
     opts.mute = mute || !shot.empty() || hidden;
     if (!app.init(opts)) return 1;

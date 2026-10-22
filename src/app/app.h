@@ -63,6 +63,7 @@ public:
         // No sound and no music, for this run only - the profile's volumes are not touched.
         // Every hidden test run (-SHOT) is silent: it plays behind whatever the user is doing.
         bool mute = false;
+        bool comfort_camera = true;
     };
 
     // Both out of line: `net_` holds a type only app.cpp sees in full.
@@ -96,6 +97,7 @@ public:
     RmlUi& ui() { return ui_; }
 
     int width() const { return width_; }
+    bool comfort_camera() const { return comfort_camera_; }
     int height() const { return height_; }
     SDL_Window* window() const { return window_; }
     Presentation& presentation() { return presentation_; }
@@ -211,6 +213,7 @@ private:
     bool have_windowed_bounds_ = false;
     bool borderless_ = false;
     bool hidden_ = false;
+    bool comfort_camera_ = true;
     bool running_ = false;
     std::function<void(App&)> frame_hook_;
     std::string game_dir_;
